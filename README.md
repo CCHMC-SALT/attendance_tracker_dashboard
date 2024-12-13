@@ -1,4 +1,4 @@
-## Guide for Using the CCHMC Attendance Tracking Dashboar
+## Guide for Using the CCHMC Attendance Tracking Dashboard
 
 1. Navigate to [salt.cchmc.org](https://salt.cchmc.org) and click on the link to complete the SALT user agreement:
 
@@ -24,7 +24,7 @@
 
 1. To view the tracker, simply navigate to [salt.cchmc.org/attendance_tracking_dashboard](https://salt.cchmc.org/attendance_tracking_dashboard)
 
-  a. You may also access the tracker from the same steps as above
+    a. You may also access the tracker from the same steps as above
 
 
 The data is stored in a Google sheets document under the account "community.table.food.service at gmail.com" with the password provided via email
