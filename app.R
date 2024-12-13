@@ -37,7 +37,7 @@ library(googlesheets4)
 }
 
 ui <- page_navbar(
-    title = "Employee Attendance Tracker",
+    title = "Attendance Tracking Dashboard",
     sidebar = sidebar(
         selectInput(
             inputId = "employee_id",
