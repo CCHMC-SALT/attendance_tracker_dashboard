@@ -27,4 +27,4 @@
   a. You may also access the tracker from the same steps as above
 
 
-The data is stored in a Google sheets document under the account "community.table.food.service@gmail.com" with the password provided via email
+The data is stored in a Google sheets document under the account "community.table.food.service at gmail.com" with the password provided via email
