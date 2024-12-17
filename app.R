@@ -14,61 +14,55 @@ library(googlesheets4)
 #     )
 
 {
-    # Set authentication token to be stored in a folder called `.secrets`
-    options(gargle_oauth_cache = ".secrets")
+    salt_board <- pins::board_connect(auth = "manual",
+                                      server = Sys.getenv("CONNECT_SERVER"),
+                                      key = Sys.getenv("CONNECT_API_KEY"))
     
-    # Authenticate manually
-    #gs4_auth()
+    d_all <- pins::pin_read(salt_board,
+                        'vanug6_117748@cchmc.org/food_service_staff_listing')
     
-    # If successful, the previous step stores a token file.
-    # Check that a file has been created with:
-    #list.files(".secrets/")
-    
-    # Check that the non-interactive authentication works by first deauthorizing:
-    #gs4_deauth()
-    
-    # Authenticate using token. If no browser opens, the authentication works.
-    gs4_auth(cache = ".secrets", 
-             email = "community.table.food.service@gmail.com")
-    
-    #write_sheet(d)
-    ss <- gs4_get("https://docs.google.com/spreadsheets/d/1isvCY_g_updwG3N0xct6CHg5PwAN1AR_JEFbrIhc-o8/edit?gid=1275446717#gid=1275446717")
-    d <- read_sheet(ss, "occurrences_data")
+    d_all <- d_all |> 
+        tidyr::unite("eid_name", c(eid, name), remove = FALSE, sep = "-")
 }
 
 ui <- page_navbar(
     title = "Attendance Tracking Dashboard",
     sidebar = sidebar(
-        selectInput(
-            inputId = "employee_id",
-            label = "Employee ID:",
-            choices = seq(1,100,1),
-            selectize = TRUE,
-            selected = NULL
+        shinyWidgets::pickerInput(
+            inputId = "id_name",
+            choices = d_all$eid_name,
+            multiple = FALSE,
+            label = "Select employee:",
+            options = list(
+                title = "nothing selected",
+                `live-search` = TRUE
+            )
         ),
         
-        selectInput(
-            inputId = "first_name",
-            label = "Employee first name:",
-            choices = d$first_name,
-            selectize = TRUE,
-            selected = NULL
-        ),
+        # selectInput(
+        #     inputId = "employee_id",
+        #     label = "Employee ID:",
+        #     choices = d_all$eid,
+        #     selectize = TRUE,
+        #     selected = NULL
+        # ),
+        # 
+        # selectInput(
+        #     inputId = "name",
+        #     label = "Employee name:",
+        #     choices = d_all$name,
+        #     selectize = TRUE,
+        #     selected = NULL
+        # ),
         
-        selectInput(
-            inputId = "last_name",
-            label = "Employee last name:",
-            choices = d$last_name,
-            selectize = TRUE,
-            selected = NULL
-        ),
-        
+
         selectInput(
             inputId = "type",
             label = "Call-off or Tardy:",
             choices = c("absent", "tardy", "other"),
             selectize = TRUE
         ),
+        
         selectInput(
             inputId = "reason",
             label = "Occurrence reason:",
@@ -108,7 +102,7 @@ ui <- page_navbar(
         selectizeInput(
             inputId = "supervisor",
             label = "Supervisor: ",
-            choices = d$supervisor
+            choices = d$manager_name
         ),
         
         actionButton(
@@ -120,7 +114,9 @@ ui <- page_navbar(
             inputId = "save",
             icon = icon("save"),
             label = "Save data"
-        )
+        ),
+        
+        width = 350
     ),
     
     nav_spacer(),
@@ -146,8 +142,7 @@ server <- function(input, output, session) {
         d <- d() |> 
             dplyr::add_row(
                 id = input$employee_id,
-                first_name = input$first_name,
-                last_name = input$last_name,
+                name = input$name,
                 type = input$type,
                 reason = input$reason,
                 notes = input$notes,
@@ -164,7 +159,6 @@ server <- function(input, output, session) {
     output$table <- render_gt({
         
         d() |> 
-            tidyr::unite("name", c(first_name, last_name), remove = TRUE, sep = " ")  |> 
             gt() |>
             cols_label(
                 id = "Employee ID",
@@ -183,7 +177,6 @@ server <- function(input, output, session) {
         
 
         d() |>
-            tidyr::unite("name", c(first_name, last_name), remove = TRUE, sep = " ")  |>
             dplyr::mutate(point_day = ifelse(grace == FALSE, 
                                              ifelse(type == "tardy", .25, 1),
                                              0)) |> 
