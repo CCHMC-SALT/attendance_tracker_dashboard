@@ -149,11 +149,23 @@ server <- function(input, output, session) {
         as.data.frame(d_track)
     })
     
+    d_new_entries <- reactiveVal({
+        data.frame(
+            eid_name = character(),
+            type = character(),
+            reason = character(),
+            notes = character(),
+            date = as.Date(x = integer(0), format = "%m-%d-%Y"), 
+            grace = logical(),
+            manager_name = character()
+        )
+    })
+    
     
 
     observeEvent(input$add_row, {
         
-        d_track <- d_track() |> 
+        d_new_entries <- d_new_entries() |> 
             dplyr::add_row(
                 eid_name = input$eid_name,
                 type = input$type,
@@ -164,7 +176,12 @@ server <- function(input, output, session) {
                 manager_name = input$manager
             )
         
+        
+        d_new_entries(d_new_entries)
+        
+        d_track <- rbind(d_track(), d_new_entries)
         d_track(d_track)
+    
 
 
     })
@@ -194,8 +211,8 @@ server <- function(input, output, session) {
         
         req(input$add_row)
         
-        d_track() |> 
-            dplyr::filter(!is.na(type)) |> 
+        d_new_entries() |> 
+            #plyr::filter(!is.na(type)) |> 
             gt() |>
             cols_label(
                 eid_name = "Employee", 
@@ -295,9 +312,9 @@ server <- function(input, output, session) {
                                                  ifelse(type == "tardy", .25, 1),
                                                  0)) |> 
                 dplyr::mutate(total_points = sum(point_day),
-                              tot_num_occurrences = dplyr::n(), .by = id) |> 
-                dplyr::select(id, name, total_points, tot_num_occurrences) |>
-                dplyr::slice_tail(n = 1, by = id) |>
+                              tot_num_occurrences = dplyr::n(), .by = eid_name) |> 
+                dplyr::select(eid_name, total_points, tot_num_occurrences) |>
+                dplyr::slice_tail(n = 1, by = eid_name) |>
                 gt() |> 
                 data_color(
                     columns = total_points,
@@ -307,8 +324,7 @@ server <- function(input, output, session) {
                     bins = c(0,6,8,15)
                 ) |>
                 cols_label(
-                    id = "Employee ID",
-                    name = "Name",
+                    eid_name = "Employee",
                     total_points = "Points",
                     tot_num_occurrences = "Total Number of\nCall-offs and Tardies",
                 )
