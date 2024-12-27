@@ -227,16 +227,19 @@ server <- function(input, output, session) {
             )
     })
     
-    output$counter <- render_gt({
+    output$point_counter <- render_gt({
 
-        d() |>
+        pins::pin_read(
+            salt_board,
+            'vanug6_117748@cchmc.org/food_service_attendance_tracking_dataset') |>
+            dplyr::filter(!is.na(type)) |>
             dplyr::mutate(point_day = ifelse(grace == FALSE, 
                                              ifelse(type == "tardy", .25, 1),
                                              0)) |> 
             dplyr::mutate(total_points = sum(point_day),
-                          tot_num_occurrences = dplyr::n(), .by = id) |> 
-            dplyr::select(id, name, total_points, tot_num_occurrences) |>
-            dplyr::slice_tail(n = 1, by = id) |>
+                          tot_num_occurrences = dplyr::n(), .by = eid_name) |> 
+            dplyr::select(eid_name, total_points, tot_num_occurrences) |>
+            dplyr::slice_tail(n = 1, by = eid_name) |>
             gt() |> 
             data_color(
                 columns = total_points,
@@ -246,8 +249,7 @@ server <- function(input, output, session) {
                 bins = c(0,6,8,15)
             ) |>
             cols_label(
-                id = "Employee ID",
-                name = "Name",
+                eid_name = "Employee",
                 total_points = "Points",
                 tot_num_occurrences = "Total Number of\nCall-offs and Tardies",
             )
@@ -281,6 +283,37 @@ server <- function(input, output, session) {
                     grace = "Grace given?",
                     manager_name = "Manager"
                 )
+        })
+        
+        output$point_counter <- render_gt({
+            
+            pins::pin_read(
+                salt_board,
+                'vanug6_117748@cchmc.org/food_service_attendance_tracking_dataset') |>
+                dplyr::filter(!is.na(type)) |>
+                dplyr::mutate(point_day = ifelse(grace == FALSE, 
+                                                 ifelse(type == "tardy", .25, 1),
+                                                 0)) |> 
+                dplyr::mutate(total_points = sum(point_day),
+                              tot_num_occurrences = dplyr::n(), .by = id) |> 
+                dplyr::select(id, name, total_points, tot_num_occurrences) |>
+                dplyr::slice_tail(n = 1, by = id) |>
+                gt() |> 
+                data_color(
+                    columns = total_points,
+                    palette = "YlOrRd",
+                    domain = 0:15,
+                    method = "bin",
+                    bins = c(0,6,8,15)
+                ) |>
+                cols_label(
+                    id = "Employee ID",
+                    name = "Name",
+                    total_points = "Points",
+                    tot_num_occurrences = "Total Number of\nCall-offs and Tardies",
+                )
+            
+            
         })
         
         
